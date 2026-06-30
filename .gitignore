@@ -24,3 +24,10 @@ var/
 wheels/
 *.egg-info/
 .idea/
+
+#layers
+*.zip
+
+# SAM
+.aws-sam
+samconfig.toml

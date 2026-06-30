@@ -1,0 +1,14 @@
+version = 0.1
+
+[dev.deploy.parameters]
+stack_name = "fhir-sandbox-api-dev"
+resolve_s3 = true
+s3_prefix = "fhir-sandbox-api-dev"
+profile = "bc1-o1-chip-cumulus_f-admin-rl"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev\" S3Root=\"s3://my_fhir_sandbox/my_fhir_cohort/\" WafArn=\"arn:aws:wafv2:us-east-1:00000000000:regional/webacl/my-webacl/foobarbqzqux\""
+image_repositories = []
+
+[dev.global.parameters]
+region = "us-east-1"
