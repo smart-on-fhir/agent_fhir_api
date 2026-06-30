@@ -1,48 +1,55 @@
 # agent-fhir-api
 
-A small Flask-based FHIR extractor API for reading ndjson FHIR resources and returning paginated results.
+A small Flask-based FHIR extractor API for reading parquet FHIR resources and returning paginated results.
+Allows for filtration by patient, and field reduction.
 
 ## Setup
 
-### Requirements
-- Python 3.14 or newer
-- UV 0.11.2 or newer
+### Local
 
-### Install dependencies
-
-From the repository root:
-
+Pull dependencies:
 ```bash
 uv sync
-source .venv/bin/activate
 ```
 
-### Data directory
+Set up parquet files. They should have a structure like this:
+```
+fhir_root/
+├─ patient/
+│  ├─ 1.parquet
+├─ observation/
+│  ├─ 1.parquet
+│  ├─ 2.parquet
+│  ├─ 3.parquet
+├─ encounter/
+│  ├─ 1.parquet
+│  ├─ 2.parquet
+```
 
-The service expects a directory of FHIR ndjson files. By default it uses:
+Run query:
+```bash
+LOCAL_ROOT=/path/to/my/fhir_root/ python3 lambda/lambda.py --fhir_resource patient \
+  --body '{"patients": ["Patient/1"]}' \
+  --offset 0 --limit 50
+```
+
+### AWS
+
+We provide a SAM template to deploy this code, and an example samconfig.
+After editing that config, you can deploy this to AWS:
 
 ```bash
-../sample-bulk-fhir-datasets/500-patients/
+sam build
+sam deploy --config-file example_samconfig.toml --config-env dev --guided
 ```
 
-You can override this location by setting the `FHIR_DIR` environment variable before starting the API. Datasets can be generate using `https://github.com/smart-on-fhir/sample-bulk-fhir-datasets`
-
-## Start
-
-Run the API from the project root:
-
-```bash
-python api.py
-```
-
-This starts the Flask development server on `http://127.0.0.1:5000`.
 
 ## Usage
 
 ### 1. Request a resource type
 
 ```bash
-curl -X POST http://127.0.0.1:5000/fhir/Patient/ \
+curl -X POST http://127.0.0.1:5000/fhir/patient/ \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
@@ -50,7 +57,7 @@ curl -X POST http://127.0.0.1:5000/fhir/Patient/ \
 ### 2. Request a resource type for specific patients
 
 ```bash
-curl -X POST http://127.0.0.1:5000/fhir/ExplanationOfBenefit/ \
+curl -X POST http://127.0.0.1:5000/fhir/observation/ \
   -H "Content-Type: application/json" \
   -d '{"patients": ["Patient/1", "Patient/2"]}'
 ```
@@ -58,7 +65,7 @@ curl -X POST http://127.0.0.1:5000/fhir/ExplanationOfBenefit/ \
 ### 3. Request a resource type and filter returned fields
 
 ```bash
-curl -X POST http://127.0.0.1:5000/fhir/Observation/ \
+curl -X POST http://127.0.0.1:5000/fhir/encounter/ \
   -H "Content-Type: application/json" \
   -d '{"patients": ["Patient/1"], "fields": ["id", "status", "code"]}'
 ```
@@ -66,7 +73,7 @@ curl -X POST http://127.0.0.1:5000/fhir/Observation/ \
 ### 4. Request a paginated page of results
 
 ```bash
-curl -X POST 'http://127.0.0.1:5000/fhir/Condition/?_offset=10&_count=5' \
+curl -X POST 'http://127.0.0.1:5000/fhir/condition/?offset=10&limit=5' \
   -H "Content-Type: application/json" \
   -d '{"patients": ["Patient/1"]}'
 ```

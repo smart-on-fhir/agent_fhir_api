@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM template for the FHIR Sandbox API.
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedPattern: '[A-Za-z0-9-]+'
+    Description: Deployment environment name (for example dev or prod).
+  S3Root:
+    Type: String
+    Description: S3 root path where the Lambda loads FHIR data from.
+  WafArn:
+    Type: String
+    Description: AWS WAF (Firewall) resource id. Ex arn:aws:wafv2:us-east-1:123456789012:regional/webacl/my-existing-waf/abc12345-d123-ef45-6789-abcdef123456
+
+Resources:
+  FhirDataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub fhir-sandbox-${Environment}-${AWS::AccountId}
+
+  FhirApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Sub ${Environment}
+      Auth:
+        DefaultAuthorizer: NONE
+      EndpointConfiguration:
+        Type: REGIONAL
+      TracingEnabled: true
+      MethodSettings:
+        - ResourcePath: '/*'
+          HttpMethod: '*'
+
+  FhirApiWafAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}::/restapis/${FhirApi}/stages/${Environment}
+      WebACLArn: !Ref WafArn
+
+  FhirFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub fhir-sandbox-${Environment}
+      Runtime: python3.14
+      Handler: lambda.lambda_handler
+      CodeUri: lambda/
+      MemorySize: 512
+      Timeout: 30
+      Environment:
+        Variables:
+          S3_ROOT: !Ref S3Root
+          HOME: /tmp/
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref FhirDataBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - kms:Decrypt
+              Resource: '*'
+      Events:
+        FhirRoute:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FhirApi
+            Path: /fhir/{fhir_resource}
+            Method: POST
