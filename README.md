@@ -36,7 +36,8 @@ LOCAL_ROOT=/path/to/my/fhir_root/ python3 lambda/lambda.py --fhir_resource patie
 ### AWS
 
 We provide a SAM template to deploy this code, and an example samconfig.
-After editing that config, you can deploy this to AWS:
+Before deploying, you should have a trove of parquet files in S3 with the same structure as described
+above. After editing the example samconfig and uploading your parquets, you can deploy this to AWS:
 
 ```bash
 sam build

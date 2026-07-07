@@ -1,8 +1,0 @@
-{% if has_patients -%}
-SELECT count(*)
-FROM read_parquet($1)
-WHERE list_contains($2, {{ patient_path }})
-{% else -%}
-SELECT count(*)
-FROM read_parquet($1)
-{% endif %}
