@@ -46,8 +46,10 @@ Resources:
       FunctionName: !Sub fhir-sandbox-${Environment}
       Runtime: python3.14
       Handler: lambda.lambda_handler
-      CodeUri: lambda/
-      MemorySize: 512
+      CodeUri: lambda_src/
+      MemorySize: 3600 # This should get us 2 cores
+      EphemeralStorage:
+        Size: 10240
       Timeout: 30
       Environment:
         Variables:

@@ -31,3 +31,5 @@ wheels/
 # SAM
 .aws-sam
 samconfig.toml
+
+phi_no_commit

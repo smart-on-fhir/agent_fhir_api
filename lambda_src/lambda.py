@@ -5,26 +5,35 @@ import logging
 import json
 
 import query
+import s3_utils
 
-logger = logging.getLogger("INFO")
+logger = logging.getLogger()
+logger.setLevel("INFO")
 
 
 def lambda_handler(event, context):
-    if query.fhir_data_path == query.PATH_NOT_SET:
+    if not query.s3_root or not query.local_root:
         logger.error("S3_ROOT and LOCAL_ROOT not set")
         return {"statusCode": 500, "body": "Lambda misconfigured. See logs."}
-    elif query.s3_root:
-        con = query.create_s3_based_db_con()
-    else:
-        con = query.create_local_db_con()
-    logger.info("Created connection")
     resource, fields, patients, offset, limit = extract_params(event)
-    resources = query.get_fhir_resource_types()
+    resources = s3_utils.get_fhir_resource_types()
     logger.info(f"Found the following resources: {resources}")
+
+    success = s3_utils.prepare_local_data_dir(resource)
+    if not success:
+        logger.error("Failed to prepare local data directory due to size constraints.")
+        return {
+            "statusCode": 500,
+            "body": "Data size exceeds 9GB lambda storage constraint.",
+        }
+
     if resource in resources:
-        data = query.get_fhir_data(con, resource, fields, patients, offset, limit)
-        count = query.get_fhir_count(con, resource, patients)
-        con.close()
+        logger.info("Fetching counts")
+        count = query.get_fhir_count(resource, patients)
+        logger.info(f"Count for resource {resource} is {count}")
+        logger.info("Fetching data")
+        data = query.get_fhir_data(resource, fields, patients, offset, limit)
+        logger.info("Processing data")
         resources.remove(resource)
         body = {
             "fhir": data,
@@ -40,6 +49,7 @@ def lambda_handler(event, context):
             },
             "otherResources": resources,
         }
+        logger.info("Done")
         return {"statusCode": 200, "body": json.dumps(body)}
     else:
         return {
