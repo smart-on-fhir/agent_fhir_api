@@ -5,9 +5,10 @@ from moto import mock_aws
 
 def test_list_s3_subdirectories_returns_top_level_directories():
     # function scoped imports needed to stop s3 from exploding
-    from lambda_src import s3_utils
 
     with mock_aws():
+        from lambda_src import s3_utils
+
         s3 = boto3.client("s3", region_name="us-east-1")
         s3.create_bucket(Bucket="example-bucket")
         s3.put_object(
@@ -24,9 +25,10 @@ def test_list_s3_subdirectories_returns_top_level_directories():
 
 
 def test_should_calculate_total_size_of_objects():
-    from lambda_src import s3_utils
 
     with mock_aws():
+        from lambda_src import s3_utils
+
         s3 = boto3.client("s3", region_name="us-east-1")
         s3.create_bucket(Bucket="example-bucket")
         s3.put_object(Bucket="example-bucket", Key="prefix/file1.parquet", Body=b"abc")
@@ -40,9 +42,10 @@ def test_should_calculate_total_size_of_objects():
 
 
 def test_should_download_s3_objects_to_local_dir(tmp_path):
-    from lambda_src import s3_utils
 
     with mock_aws():
+        from lambda_src import s3_utils
+
         s3 = boto3.client("s3", region_name="us-east-1")
         s3.create_bucket(Bucket="example-bucket")
         s3.put_object(Bucket="example-bucket", Key="prefix/file1.parquet", Body=b"abc")
@@ -57,18 +60,20 @@ def test_should_download_s3_objects_to_local_dir(tmp_path):
 
 
 def test_should_parse_bucket_and_prefix():
-    from lambda_src import s3_utils
 
     with mock_aws():
+        from lambda_src import s3_utils
+
         bucket, prefix = s3_utils.parse_bucket_and_prefix("s3://my-bucket/my-prefix/")
         assert bucket == "my-bucket"
         assert prefix == "my-prefix/"
 
 
 def test_should_parse_bucket_and_prefix_without_trailing_slash():
-    from lambda_src import s3_utils
 
     with mock_aws():
+        from lambda_src import s3_utils
+
         bucket, prefix = s3_utils.parse_bucket_and_prefix(
             "s3://another-bucket/another-prefix"
         )
@@ -77,8 +82,9 @@ def test_should_parse_bucket_and_prefix_without_trailing_slash():
 
 
 def test_should_raise_value_error_for_invalid_s3_uri():
-    from lambda_src import s3_utils
     import pytest
 
     with pytest.raises(ValueError), mock_aws():
+        from lambda_src import s3_utils
+
         s3_utils.parse_bucket_and_prefix("invalid-uri")
