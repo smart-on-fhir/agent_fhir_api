@@ -1,4 +1,4 @@
-# agent-fhir-api
+# FHIR REST API 
 
 A small Flask-based FHIR extractor API for reading parquet FHIR resources and returning paginated results.
 Allows for filtration by patient, and field reduction.
