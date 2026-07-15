@@ -8,9 +8,6 @@ import re
 import logging
 from os import path
 
-# try:
-#     from . import query
-# except ImportError:  # pragma: no cover - fallback for Lambda's flat module layout
 import query
 
 logger = logging.getLogger()

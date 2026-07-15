@@ -7,7 +7,7 @@ s3_prefix = "fhir-sandbox-api-dev"
 profile = "bc1-o1-chip-cumulus_f-admin-rl"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev\" S3Root=\"s3://fhir-sandbox-dev-933137588087/phi_sandbox_cohort_100/\" WafArn=\"arn:aws:wafv2:us-east-1:933137588087:regional/webacl/webacl-internal-access-bch-nat-001/c669ddc0-f599-4b75-a716-25d01e56ea83\""
+parameter_overrides = "Environment=\"dev\" S3Root=\"s3://fhir-sandbox-dev-933137588087/phi_sandbox_cohort_100/\" AthenaDatabase=\"cumulus_epic_db\" AthenaOutputBucket=\"fhir-sandbox-dev-933137588087\" AthenaSourceBucket=\"cumulus-athena-933137588087-us-east-1\" AthenaETLBucket=\"cumulus-etl-output-933137588087-us-east-1\" WafArn=\"arn:aws:wafv2:us-east-1:933137588087:regional/webacl/webacl-internal-access-bch-nat-001/c669ddc0-f599-4b75-a716-25d01e56ea83\""
 image_repositories = []
 
 [dev.global.parameters]

@@ -11,6 +11,18 @@ Parameters:
   S3Root:
     Type: String
     Description: S3 root path where the Lambda loads FHIR data from.
+  AthenaDatabase:
+    Type: String
+    Description: Athena database to use for fetch queries.
+  AthenaOutputBucket:
+    Type: String
+    Description: S3 bucket to write Athena query results to.
+  AthenaSourceBucket:
+    Type: String
+    Description: S3 bucket containing source data for Athena queries.
+  AthenaETLBucket:
+    Type: String
+    Description: S3 bucket containing etl data for Athena queries.
   WafArn:
     Type: String
     Description: AWS WAF (Firewall) resource id. Ex arn:aws:wafv2:us-east-1:123456789012:regional/webacl/my-existing-waf/abc12345-d123-ef45-6789-abcdef123456
@@ -69,4 +81,69 @@ Resources:
           Properties:
             RestApiId: !Ref FhirApi
             Path: /fhir/{fhir_resource}
+            Method: POST
+
+  FetchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub fetch-sandbox-${Environment}
+      Runtime: python3.14
+      Handler: lambda.lambda_handler
+      CodeUri: fetch_data/
+      MemorySize: 512
+      Timeout: 900
+      Environment:
+        Variables:
+          ATHENA_DATABASE: !Ref AthenaDatabase
+          ATHENA_OUTPUT_BUCKET: !Ref AthenaOutputBucket
+          ATHENA_SOURCE_BUCKET: !Ref AthenaSourceBucket
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - athena:StartQueryExecution
+                - athena:GetQueryExecution
+                - athena:GetQueryResults
+                - athena:GetTableMetadata
+                - athena:GetTable
+                - athena:GetDatabase
+                - athena:GetPartitions
+                - glue:GetDatabase
+                - glue:GetTable
+                - glue:GetTables
+                - glue:GetPartition
+                - glue:GetPartitions
+                - glue:GetTableVersion
+                - glue:GetTableVersions
+                - athena:*
+                - glue:*
+                - kms:Decrypt
+                - kms:DescribeKey
+                - kms:GenerateDataKey
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:PutObjectAcl
+                - s3:ListBucket
+                - s3:GetBucketLocation
+              Resource:
+                - !Sub arn:${AWS::Partition}:s3:::${AthenaOutputBucket}
+                - !Sub arn:${AWS::Partition}:s3:::${AthenaOutputBucket}/*  
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:ListBucket
+              Resource:
+                - !Sub arn:${AWS::Partition}:s3:::${AthenaETLBucket}
+                - !Sub arn:${AWS::Partition}:s3:::${AthenaETLBucket}/*
+                - !Sub arn:${AWS::Partition}:s3:::${AthenaSourceBucket}
+                - !Sub arn:${AWS::Partition}:s3:::${AthenaSourceBucket}/*
+            
+      Events:
+        FetchRoute:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FhirApi
+            Path: /build/fhir
             Method: POST
