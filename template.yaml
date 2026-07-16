@@ -8,9 +8,9 @@ Parameters:
     Default: dev
     AllowedPattern: '[A-Za-z0-9-]+'
     Description: Deployment environment name (for example dev or prod).
-  S3Root:
+  FHIRSourceBucket:
     Type: String
-    Description: S3 root path where the Lambda loads FHIR data from.
+    Description: S3 bucket where the Lambda loads FHIR data from.
   WafArn:
     Type: String
     Description: AWS WAF (Firewall) resource id. Ex arn:aws:wafv2:us-east-1:123456789012:regional/webacl/my-existing-waf/abc12345-d123-ef45-6789-abcdef123456
@@ -53,7 +53,7 @@ Resources:
       Timeout: 30
       Environment:
         Variables:
-          S3_ROOT: !Ref S3Root
+          SOURCE_BUCKET: !Ref FHIRSourceBucket
           HOME: /tmp/
       Policies:
         - S3ReadPolicy:
@@ -68,5 +68,5 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref FhirApi
-            Path: /fhir/{fhir_resource}
+            Path: /{cohort_id}/fhir/{fhir_resource}
             Method: POST

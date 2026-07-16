@@ -12,14 +12,14 @@ def test_list_s3_subdirectories_returns_top_level_directories():
         s3 = boto3.client("s3", region_name="us-east-1")
         s3.create_bucket(Bucket="example-bucket")
         s3.put_object(
-            Bucket="example-bucket", Key="resource-a/file1.parquet", Body=b"1"
+            Bucket="example-bucket", Key="my_cohort/resource-a/file1.parquet", Body=b"1"
         )
         s3.put_object(
-            Bucket="example-bucket", Key="resource-b/file2.parquet", Body=b"2"
+            Bucket="example-bucket", Key="my_cohort/resource-b/file2.parquet", Body=b"2"
         )
         s3.put_object(Bucket="example-bucket", Key="README.txt", Body=b"3")
 
-        result = s3_utils.list_s3_subdirectories("s3://example-bucket/")
+        result = s3_utils.list_s3_subdirectories("example-bucket", "my_cohort")
 
         assert sorted(result) == ["resource-a", "resource-b"]
 
@@ -57,34 +57,3 @@ def test_should_download_s3_objects_to_local_dir(tmp_path):
 
         assert (tmp_path / "file1.parquet").read_bytes() == b"abc"
         assert (tmp_path / "file2.parquet").read_bytes() == b"defgh"
-
-
-def test_should_parse_bucket_and_prefix():
-
-    with mock_aws():
-        from lambda_src import s3_utils
-
-        bucket, prefix = s3_utils.parse_bucket_and_prefix("s3://my-bucket/my-prefix/")
-        assert bucket == "my-bucket"
-        assert prefix == "my-prefix/"
-
-
-def test_should_parse_bucket_and_prefix_without_trailing_slash():
-
-    with mock_aws():
-        from lambda_src import s3_utils
-
-        bucket, prefix = s3_utils.parse_bucket_and_prefix(
-            "s3://another-bucket/another-prefix"
-        )
-        assert bucket == "another-bucket"
-        assert prefix == "another-prefix"
-
-
-def test_should_raise_value_error_for_invalid_s3_uri():
-    import pytest
-
-    with pytest.raises(ValueError), mock_aws():
-        from lambda_src import s3_utils
-
-        s3_utils.parse_bucket_and_prefix("invalid-uri")

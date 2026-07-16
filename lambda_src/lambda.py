@@ -6,20 +6,18 @@ import json
 
 import query
 import s3_utils
+import env
 
 logger = logging.getLogger()
 logger.setLevel("INFO")
 
 
 def lambda_handler(event, context):
-    if not query.s3_root or not query.local_root:
-        logger.error("S3_ROOT and LOCAL_ROOT not set")
-        return {"statusCode": 500, "body": "Lambda misconfigured. See logs."}
-    resource, fields, patients, offset, limit = extract_params(event)
-    resources = s3_utils.get_fhir_resource_types()
+    cohort_id, resource, fields, patients, offset, limit = extract_params(event)
+    resources = s3_utils.get_fhir_resource_types(cohort_id)
     logger.info(f"Found the following resources: {resources}")
 
-    success = s3_utils.prepare_local_data_dir(resource)
+    success = s3_utils.prepare_local_data_dir(resource, env.source_bucket, cohort_id)
     if not success:
         logger.error("Failed to prepare local data directory due to size constraints.")
         return {
@@ -58,8 +56,9 @@ def lambda_handler(event, context):
         }
 
 
-def extract_params(event) -> tuple[str, list[str], list[str], int, int]:
+def extract_params(event) -> tuple[str, str, list[str], list[str], int, int]:
     resource = event.get("pathParameters").get("fhir_resource")
+    cohort_id = event.get("pathParameters").get("cohort_id")
     fields = []
     patients = []
     offset = 0
@@ -71,7 +70,7 @@ def extract_params(event) -> tuple[str, list[str], list[str], int, int]:
     if event.get("queryStringParameters"):
         offset = int(event.get("queryStringParameters").get("offset", "0"))
         limit = int(event.get("queryStringParameters").get("limit", "50"))
-    return resource, fields, patients, offset, limit
+    return cohort_id, resource, fields, patients, offset, limit
 
 
 if __name__ == "__main__":

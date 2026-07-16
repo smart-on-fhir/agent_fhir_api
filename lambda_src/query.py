@@ -2,6 +2,7 @@ import os
 
 import duckdb
 import logging
+import env
 from jinja2 import Environment, FileSystemLoader
 
 logger = logging.getLogger()
@@ -12,10 +13,6 @@ template_env = Environment(
     trim_blocks=True,
     lstrip_blocks=True,
 )
-
-PATH_NOT_SET = "NOT SET"
-s3_root = os.getenv("S3_ROOT")
-local_root = os.getenv("LOCAL_ROOT", "/tmp/fhir_data/")
 
 con = duckdb.connect(":memory:")
 
@@ -28,7 +25,7 @@ def get_fhir_data(
     limit: int,
 ):
     logger.info("Setting up query")
-    parquet_pattern = os.path.join(local_root, resource, "*")
+    parquet_pattern = os.path.join(env.local_root, resource, "*")
     if resource != "patient":
         patients = [f"Patient/{p}" for p in patients] if patients else []
 
@@ -66,7 +63,7 @@ def to_dict(row: tuple, column_names: list[str]):
 
 
 def get_fhir_count(resource: str, patients: list[str]) -> int:
-    parquet_pattern = os.path.join(local_root, resource, "*")
+    parquet_pattern = os.path.join(env.local_root, resource, "*")
 
     template = template_env.get_template("fhir_count.sql.jinja2")
     query = template.render(
