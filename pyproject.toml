@@ -15,6 +15,7 @@ dependencies = [
 dev = [
     "moto>=5.0.0",
     "pytest>=9.1.1",
+    "pytest-env>=0.7.0",
     "ruff>=0.15.20",
 ]
 
@@ -23,3 +24,7 @@ pythonpath = [
     # This stops imports from exploding when running tests
     'lambda_src/',
 ]
+
+# Move the environment variables to this dedicated section
+[tool.pytest_env]
+LOCAL_ROOT = "./test_data/"
