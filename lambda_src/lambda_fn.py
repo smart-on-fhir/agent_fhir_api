@@ -13,6 +13,35 @@ logger.setLevel("INFO")
 
 
 def lambda_handler(event, context):
+    return determine_route(event)(event)
+
+
+def run_count_query(event) -> dict:
+    cohort_id, resource, fields, patients, _, _ = extract_params(event)
+    resources = s3_utils.get_fhir_resource_types(cohort_id)
+    logger.info(f"Found the following resources: {resources}")
+
+    success = s3_utils.prepare_local_data_dir(resource, env.source_bucket, cohort_id)
+    if not success:
+        logger.error("Failed to prepare local data directory due to size constraints.")
+        return {
+            "statusCode": 500,
+            "body": "Data size exceeds 9GB lambda storage constraint.",
+        }
+
+    if resource in resources:
+        logger.info("Fetching counts")
+        count = query.get_fhir_count(resource, patients)
+        logger.info(f"Count for resource {resource} is {count}")
+        return {"statusCode": 200, "body": count}
+    else:
+        return {
+            "statusCode": "404",
+            "body": f"Resource {resource} not found",
+        }
+
+
+def run_fhir_query(event) -> dict:
     cohort_id, resource, fields, patients, offset, limit = extract_params(event)
     resources = s3_utils.get_fhir_resource_types(cohort_id)
     logger.info(f"Found the following resources: {resources}")
@@ -54,6 +83,16 @@ def lambda_handler(event, context):
             "statusCode": "404",
             "body": f"Resource {resource} not found",
         }
+
+
+def determine_route(event):
+    cohort_id, resource, _, _, _, _ = extract_params(event)
+    route = event.get("resource")
+    if route == f"/{cohort_id}/fhir/{resource}/count":
+        return run_count_query
+    if route == f"/{cohort_id}/fhir/{resource}":
+        return run_fhir_query
+    return lambda e: {"statusCode": "404", "body": "Route not found"}
 
 
 def extract_params(event) -> tuple[str, str, list[str], list[str], int, int]:
