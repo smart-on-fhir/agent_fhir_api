@@ -45,7 +45,7 @@ Resources:
     Properties:
       FunctionName: !Sub fhir-sandbox-${Environment}
       Runtime: python3.14
-      Handler: lambda.lambda_handler
+      Handler: lambda_fn.lambda_handler
       CodeUri: lambda_src/
       MemorySize: 3600 # This should get us 2 cores
       EphemeralStorage:
@@ -69,4 +69,10 @@ Resources:
           Properties:
             RestApiId: !Ref FhirApi
             Path: /{cohort_id}/fhir/{fhir_resource}
+            Method: POST
+        FhirCountRoute:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FhirApi
+            Path: /{cohort_id}/fhir/{fhir_resource}/count
             Method: POST

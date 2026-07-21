@@ -49,20 +49,35 @@ sam deploy --config-file example_samconfig.toml --config-env dev --guided
 
 ### 1. Request a resource type
 
+#### 1.1. FHIR:
 ```bash
 curl -X POST http://127.0.0.1:5000/fhir/patient/ \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
 
+#### 1.2. Count:
+```bash
+curl -X POST http://127.0.0.1:5000/fhir/patient/count \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
 ### 2. Request a resource type for specific patients
 
+#### 2.1. FHIR:
 ```bash
 curl -X POST http://127.0.0.1:5000/fhir/observation/ \
   -H "Content-Type: application/json" \
   -d '{"patients": ["Patient/1", "Patient/2"]}'
 ```
 
+#### 2.2. Count:
+```bash
+curl -X POST http://127.0.0.1:5000/fhir/observation/count \
+  -H "Content-Type: application/json" \
+  -d '{"patients": ["Patient/1", "Patient/2"]}'
+```
 ### 3. Request a resource type and filter returned fields
 
 ```bash
