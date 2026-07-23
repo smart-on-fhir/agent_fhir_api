@@ -1,4 +1,4 @@
-# FHIR REST API 
+# FHIR REST API
 
 A small Flask-based FHIR extractor API for reading parquet FHIR resources and returning paginated results.
 Allows for filtration by patient, and field reduction.
@@ -8,11 +8,13 @@ Allows for filtration by patient, and field reduction.
 ### Local
 
 Pull dependencies:
+
 ```bash
 uv sync
 ```
 
 Set up parquet files. They should have a structure like this:
+
 ```
 fhir_root/
 ├─ patient/
@@ -27,6 +29,7 @@ fhir_root/
 ```
 
 Run query:
+
 ```bash
 LOCAL_ROOT=/path/to/my/fhir_root/ python3 lambda/lambda.py --fhir_resource patient \
   --body '{"patients": ["Patient/1"]}' \
@@ -44,19 +47,32 @@ sam build
 sam deploy --config-file example_samconfig.toml --config-env dev --guided
 ```
 
+## Architecture
+
+This repo consists of a SAM template that deploys a lambda backed REST API, and a small support ecosystem to provide data to that API. The key objects in this ecosystem are as follows:
+
+- FHIRSourceBucket: a S3 bucket, lives outside this template. Where your athena data lives.
+- FhirDataBucket: a S3 bucket. Where the template houses the FHIR data it queries and returns.
+- FhirApi: Lambda function. The API itself. Reads from FhirDataBucket.
+- Converter: Lambda function. Converts ndjsons that land in FhirDataBucket to parquets
+- DataFetcher: Lambda function. Fetches data from FHIRSourceBucket via Athena queries and writes the resulting parquets to FhirDataBucket
+
+![Architecture diagram](diagram.png)
 
 ## Usage
 
 ### 1. Request a resource type
 
-#### 1.1. FHIR:
+#### 1.1. FHIR
+
 ```bash
 curl -X POST http://127.0.0.1:5000/fhir/patient/ \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
 
-#### 1.2. Count:
+#### 1.2. Count
+
 ```bash
 curl -X POST http://127.0.0.1:5000/fhir/patient/count \
   -H "Content-Type: application/json" \
@@ -65,19 +81,22 @@ curl -X POST http://127.0.0.1:5000/fhir/patient/count \
 
 ### 2. Request a resource type for specific patients
 
-#### 2.1. FHIR:
+#### 2.1. FHIR
+
 ```bash
 curl -X POST http://127.0.0.1:5000/fhir/observation/ \
   -H "Content-Type: application/json" \
   -d '{"patients": ["Patient/1", "Patient/2"]}'
 ```
 
-#### 2.2. Count:
+#### 2.2. Count
+
 ```bash
 curl -X POST http://127.0.0.1:5000/fhir/observation/count \
   -H "Content-Type: application/json" \
   -d '{"patients": ["Patient/1", "Patient/2"]}'
 ```
+
 ### 3. Request a resource type and filter returned fields
 
 ```bash
@@ -93,4 +112,3 @@ curl -X POST 'http://127.0.0.1:5000/fhir/condition/?offset=10&limit=5' \
   -H "Content-Type: application/json" \
   -d '{"patients": ["Patient/1"]}'
 ```
-

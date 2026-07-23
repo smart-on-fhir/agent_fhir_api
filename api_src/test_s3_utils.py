@@ -7,7 +7,7 @@ def test_list_s3_subdirectories_returns_top_level_directories():
     # function scoped imports needed to stop s3 from exploding
 
     with mock_aws():
-        from lambda_src import s3_utils
+        from api_src import s3_utils
 
         s3 = boto3.client("s3", region_name="us-east-1")
         s3.create_bucket(Bucket="example-bucket")
@@ -27,7 +27,7 @@ def test_list_s3_subdirectories_returns_top_level_directories():
 def test_should_calculate_total_size_of_objects():
 
     with mock_aws():
-        from lambda_src import s3_utils
+        from api_src import s3_utils
 
         s3 = boto3.client("s3", region_name="us-east-1")
         s3.create_bucket(Bucket="example-bucket")
@@ -44,7 +44,7 @@ def test_should_calculate_total_size_of_objects():
 def test_should_download_s3_objects_to_local_dir(tmp_path):
 
     with mock_aws():
-        from lambda_src import s3_utils
+        from api_src import s3_utils
 
         s3 = boto3.client("s3", region_name="us-east-1")
         s3.create_bucket(Bucket="example-bucket")

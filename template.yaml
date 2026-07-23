@@ -46,7 +46,7 @@ Resources:
       FunctionName: !Sub fhir-sandbox-${Environment}
       Runtime: python3.14
       Handler: lambda_fn.lambda_handler
-      CodeUri: lambda_src/
+      CodeUri: api_src/
       MemorySize: 3600 # This should get us 2 cores
       EphemeralStorage:
         Size: 10240
@@ -57,7 +57,7 @@ Resources:
           HOME: /tmp/
       Policies:
         - S3ReadPolicy:
-            BucketName: !Ref FhirDataBucket
+            BucketName: !Sub fhir-sandbox-${Environment}-${AWS::AccountId}
         - Statement:
             - Effect: Allow
               Action:
@@ -76,3 +76,39 @@ Resources:
             RestApiId: !Ref FhirApi
             Path: /{cohort_id}/fhir/{fhir_resource}/count
             Method: POST
+
+  ConverterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub fhir-sandbox-${Environment}-converter
+      Runtime: python3.14
+      Handler: lambda_fn.lambda_handler
+      CodeUri: convert_src/
+      MemorySize: 3600
+      EphemeralStorage:
+        Size: 10240
+      Timeout: 900
+      Environment:
+        Variables:
+          HOME: /tmp/
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub fhir-sandbox-${Environment}-${AWS::AccountId}
+        - S3WritePolicy:
+            BucketName: !Sub fhir-sandbox-${Environment}-${AWS::AccountId}
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:DeleteObject
+              Resource: !Sub arn:${AWS::Partition}:s3:::fhir-sandbox-${Environment}-${AWS::AccountId}/*
+      Events:
+        S3CreateNdjson:
+          Type: S3
+          Properties:
+            Bucket: !Ref FhirDataBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: .ndjson
