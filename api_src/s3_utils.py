@@ -1,12 +1,10 @@
+import logging
 import os
-from pathlib import Path
 import shutil
+from os import path
+from pathlib import Path
 
 import boto3
-
-import logging
-from os import path
-
 import env
 
 logger = logging.getLogger()

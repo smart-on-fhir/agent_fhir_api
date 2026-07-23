@@ -1,8 +1,7 @@
-from lambda_src import query, env
+from api_src import query
 
 
 def test_should_get_all_patients():
-    env.local_root = "./test_data/"
     result = query.get_fhir_data("patient", [], [], 0, 1000)
 
     assert len(result) == 5

@@ -16,15 +16,15 @@ dev = [
     "moto>=5.0.0",
     "pytest>=9.1.1",
     "pytest-env>=0.7.0",
-    "ruff>=0.15.20",
+    "ruff>=0.16.0",
 ]
 
 [tool.pytest.ini_options]
 pythonpath = [
     # This stops imports from exploding when running tests
-    'lambda_src/',
+    'api_src/',
 ]
 
 # Move the environment variables to this dedicated section
 [tool.pytest_env]
-LOCAL_ROOT = "./test_data/"
+LOCAL_ROOT = "./test_data/my_parquet_cohort/"

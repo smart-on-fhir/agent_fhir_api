@@ -1,12 +1,11 @@
 import argparse
+import json
+import logging
 import math
 
-import logging
-import json
-
+import env
 import query
 import s3_utils
-import env
 
 logger = logging.getLogger()
 logger.setLevel("INFO")
@@ -17,7 +16,7 @@ def lambda_handler(event, context):
 
 
 def run_count_query(event) -> dict:
-    cohort_id, resource, fields, patients, _, _ = extract_params(event)
+    cohort_id, resource, _, patients, _, _ = extract_params(event)
     resources = s3_utils.get_fhir_resource_types(cohort_id)
     logger.info(f"Found the following resources: {resources}")
 
