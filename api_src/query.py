@@ -1,7 +1,7 @@
+import logging
 import os
 
 import duckdb
-import logging
 import env
 from jinja2 import Environment, FileSystemLoader
 

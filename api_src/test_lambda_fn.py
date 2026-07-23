@@ -1,4 +1,4 @@
-from lambda_src import lambda_fn
+from api_src import lambda_fn
 
 
 def test_should_route_count():
